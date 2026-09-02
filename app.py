@@ -5,9 +5,9 @@ import streamlit as st
 from google import genai
 
 
-# --------------------------------------------------
+# ============================================================
 # PAGE CONFIGURATION
-# --------------------------------------------------
+# ============================================================
 
 st.set_page_config(
     page_title="AI Image Generator",
@@ -16,72 +16,55 @@ st.set_page_config(
 )
 
 
-# --------------------------------------------------
-# GET API KEY
-# --------------------------------------------------
+# ============================================================
+# GET GEMINI API KEY
+# ============================================================
 
 try:
     GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
 except Exception:
     st.error("❌ GEMINI_API_KEY is missing.")
     st.info(
-        "Add GEMINI_API_KEY to your Streamlit Cloud Secrets."
+        "Add GEMINI_API_KEY to Streamlit Secrets."
     )
     st.stop()
 
 
-# --------------------------------------------------
+# ============================================================
 # GEMINI CLIENT
-# --------------------------------------------------
+# ============================================================
 
 client = genai.Client(
     api_key=GEMINI_API_KEY
 )
 
 
-# --------------------------------------------------
+# ============================================================
 # MODEL
-# --------------------------------------------------
+# ============================================================
 
 MODEL_NAME = "gemini-3.1-flash-image"
 
 
-# --------------------------------------------------
+# ============================================================
 # TITLE
-# --------------------------------------------------
+# ============================================================
 
 st.title("🎨 AI Image Generator")
 
 st.write(
-    "Turn your ideas into high-quality images using AI."
+    "Create high-quality realistic images from your ideas using Gemini AI."
 )
 
 
-# --------------------------------------------------
-# PROMPT
-# --------------------------------------------------
+# ============================================================
+# SIDEBAR
+# ============================================================
 
-prompt = st.text_area(
-    "✍️ Enter your prompt",
-    placeholder=(
-        "Example: A realistic male lion standing beside "
-        "its cub in the African savanna at sunset, "
-        "professional wildlife photography, natural "
-        "lighting, realistic fur, detailed environment"
-    ),
-    height=140
-)
+with st.sidebar:
 
+    st.header("⚙️ Image Settings")
 
-# --------------------------------------------------
-# IMAGE SETTINGS
-# --------------------------------------------------
-
-st.subheader("⚙️ Image Settings")
-
-col1, col2 = st.columns(2)
-
-with col1:
     aspect_ratio = st.selectbox(
         "Aspect Ratio",
         [
@@ -90,10 +73,10 @@ with col1:
             "9:16",
             "4:3",
             "3:4"
-        ]
+        ],
+        index=0
     )
 
-with col2:
     image_size = st.selectbox(
         "Image Quality",
         [
@@ -104,194 +87,234 @@ with col2:
         index=1
     )
 
+    st.divider()
 
-# --------------------------------------------------
-# GENERATE BUTTON
-# --------------------------------------------------
+    st.info(
+        "💡 For the most realistic results, describe "
+        "the subject, environment, lighting, camera "
+        "style, and important details."
+    )
 
-generate = st.button(
-    "🎨 Generate Image",
-    type="primary",
-    use_container_width=True
+
+# ============================================================
+# PROMPT
+# ============================================================
+
+prompt = st.text_area(
+    "✍️ Enter your image prompt",
+    placeholder=(
+        "Example: A realistic adult male lion walking "
+        "beside a lion cub in the African savanna at "
+        "golden hour, natural wildlife photography, "
+        "realistic fur, realistic anatomy, cinematic lighting"
+    ),
+    height=160
 )
 
 
-# --------------------------------------------------
-# GENERATE IMAGE
-# --------------------------------------------------
+# ============================================================
+# GENERATE BUTTON
+# ============================================================
 
-if generate:
+if st.button(
+    "🎨 Generate Image",
+    use_container_width=True
+):
+
+    # --------------------------------------------------------
+    # CHECK PROMPT
+    # --------------------------------------------------------
 
     if not prompt.strip():
+
         st.warning(
             "⚠️ Please enter a prompt first."
         )
+
         st.stop()
 
-    # Add quality instructions without forcing
-    # every image into a fake-looking style.
+
+    # --------------------------------------------------------
+    # REALISM INSTRUCTIONS
+    # --------------------------------------------------------
+
     final_prompt = f"""
-Create the image exactly according to this request:
+Create a highly realistic, high-quality image based on this request:
 
-{prompt.strip()}
+{prompt}
 
-Prioritize:
-- realistic anatomy
-- natural proportions
-- physically accurate lighting
-- realistic textures
-- natural colors
-- coherent composition
-- realistic depth and perspective
-- high visual detail
-- professional photography quality when the
-  subject is photographic
+IMPORTANT VISUAL REQUIREMENTS:
 
-Do not add subjects or objects that were not requested.
-Do not turn the image into a cartoon or illustration
-unless the user explicitly asks for that style.
+- Photorealistic appearance
+- Realistic anatomy and proportions
+- Natural facial features
+- Realistic textures and materials
+- Physically accurate lighting
+- Natural shadows and reflections
+- Realistic depth and perspective
+- Detailed environment
+- Natural colors
+- Professional photography quality when appropriate
+- Sharp important details
+- Coherent composition
+- Realistic scale between objects
+- No unnecessary objects or subjects
+- Do not make the image cartoon-like
+- Do not make it childish
+- Do not use exaggerated anatomy
+- Do not add extra limbs, fingers, eyes, faces, or body parts
+- Do not distort objects
+- Follow the user's requested scene exactly
 """
 
+
+    # --------------------------------------------------------
+    # GENERATE IMAGE
+    # --------------------------------------------------------
+
     with st.spinner(
-        "🎨 Creating your image..."
+        "🎨 Generating your image... Please wait."
     ):
 
         try:
 
-            # --------------------------------------------------
-            # GEMINI IMAGE GENERATION
-            # --------------------------------------------------
-
-            interaction = client.interactions.create(
+            response = client.interactions.create(
                 model=MODEL_NAME,
+
                 input=final_prompt,
+
                 response_format={
                     "type": "image",
-                    "mime_type": "image/png",
+                    "mime_type": "image/jpeg",
                     "aspect_ratio": aspect_ratio,
                     "image_size": image_size
                 },
+
                 generation_config={
                     "thinking_level": "high"
                 }
             )
 
 
-            # --------------------------------------------------
-            # GET GENERATED IMAGE
-            # --------------------------------------------------
+            # ------------------------------------------------
+            # FIND GENERATED IMAGE
+            # ------------------------------------------------
 
-            generated_image = interaction.output_image
+            generated_image = None
+
+            for output in response.output:
+
+                if hasattr(output, "data"):
+
+                    generated_image = output.data
+
+                    break
+
+
+            # ------------------------------------------------
+            # CHECK IMAGE
+            # ------------------------------------------------
 
             if not generated_image:
+
                 st.error(
                     "❌ Gemini did not return an image."
                 )
+
                 st.stop()
 
 
-            # --------------------------------------------------
-            # DECODE IMAGE
-            # --------------------------------------------------
+            # ------------------------------------------------
+            # DECODE BASE64 IMAGE
+            # ------------------------------------------------
 
             image_data = base64.b64decode(
-                generated_image.data
+                generated_image
             )
 
 
-            # --------------------------------------------------
-            # DISPLAY IMAGE
-            # --------------------------------------------------
+            # ------------------------------------------------
+            # OPEN IMAGE
+            # ------------------------------------------------
+
+            from PIL import Image
+
+            image = Image.open(
+                BytesIO(image_data)
+            )
+
+
+            # ------------------------------------------------
+            # SUCCESS
+            # ------------------------------------------------
 
             st.success(
                 "✅ Image generated successfully!"
             )
 
+
+            # ------------------------------------------------
+            # DISPLAY IMAGE
+            # ------------------------------------------------
+
             st.image(
-                image_data,
-                caption="AI Generated Image",
+                image,
+                caption="Generated Image",
                 use_container_width=True
             )
 
 
-            # --------------------------------------------------
+            # ------------------------------------------------
+            # CONVERT TO JPEG
+            # ------------------------------------------------
+
+            image_bytes = BytesIO()
+
+            # Convert RGB/RGBA to RGB for JPEG
+            if image.mode != "RGB":
+
+                image = image.convert("RGB")
+
+
+            image.save(
+                image_bytes,
+                format="JPEG",
+                quality=95
+            )
+
+
+            # ------------------------------------------------
             # DOWNLOAD BUTTON
-            # --------------------------------------------------
+            # ------------------------------------------------
 
             st.download_button(
                 label="⬇️ Download Image",
-                data=image_data,
-                file_name="ai_generated_image.png",
-                mime="image/png",
+                data=image_bytes.getvalue(),
+                file_name="ai_generated_image.jpg",
+                mime="image/jpeg",
                 use_container_width=True
             )
 
 
-        # --------------------------------------------------
+        # ====================================================
         # ERROR HANDLING
-        # --------------------------------------------------
+        # ====================================================
 
-        except Exception as error:
+        except Exception as e:
 
             st.error(
                 "❌ Image generation failed."
             )
 
-            st.code(
-                str(error)
-            )
+            st.exception(e)
 
 
-# --------------------------------------------------
-# SIDEBAR
-# --------------------------------------------------
-
-with st.sidebar:
-
-    st.header("🎨 AI Image Generator")
-
-    st.write(
-        "**Model:**"
-    )
-
-    st.code(
-        MODEL_NAME
-    )
-
-    st.write(
-        "**Provider:**"
-    )
-
-    st.write(
-        "Google Gemini"
-    )
-
-    st.divider()
-
-    st.write(
-        "### 💡 Prompt Example"
-    )
-
-    st.write(
-        "A realistic snow leopard sitting on a "
-        "mountain cliff during sunrise, natural "
-        "wildlife photography, detailed fur, "
-        "realistic mountains and atmospheric lighting."
-    )
-
-    st.divider()
-
-    st.caption(
-        "Powered by Google Gemini"
-    )
-
-
-# --------------------------------------------------
+# ============================================================
 # FOOTER
-# --------------------------------------------------
+# ============================================================
 
 st.divider()
 
 st.caption(
-    "🎨 AI Image Generator • Gemini 3.1 Flash Image"
+    "Powered by Google Gemini • Model: gemini-3.1-flash-image"
 )
