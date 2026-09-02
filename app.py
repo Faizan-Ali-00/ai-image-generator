@@ -1,4 +1,4 @@
-```python
+python
 import base64
 from io import BytesIO
 
@@ -593,4 +593,4 @@ st.caption(
     "Powered by Cloudflare Workers AI • "
     "FLUX.2 Klein 4B"
 )
-```
+
