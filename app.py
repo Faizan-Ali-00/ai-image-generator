@@ -1,8 +1,10 @@
+```python
 import base64
 from io import BytesIO
 
+import requests
 import streamlit as st
-from openai import OpenAI
+from PIL import Image
 
 
 # ============================================================
@@ -10,49 +12,58 @@ from openai import OpenAI
 # ============================================================
 
 st.set_page_config(
-    page_title="Grok AI Image Generator",
+    page_title="AI Image Generator",
     page_icon="🎨",
     layout="centered"
 )
 
 
 # ============================================================
-# GET XAI API KEY
+# CLOUDFLARE CREDENTIALS
 # ============================================================
 
 try:
-    XAI_API_KEY = st.secrets["XAI_API_KEY"]
+    CLOUDFLARE_ACCOUNT_ID = st.secrets["CLOUDFLARE_ACCOUNT_ID"]
+    CLOUDFLARE_API_TOKEN = st.secrets["CLOUDFLARE_API_TOKEN"]
+
 except Exception:
-    st.error("❌ XAI_API_KEY is missing.")
-    st.info("Add XAI_API_KEY to Streamlit Secrets.")
+    st.error("❌ Cloudflare credentials are missing.")
+
+    st.info(
+        "Add CLOUDFLARE_ACCOUNT_ID and "
+        "CLOUDFLARE_API_TOKEN to Streamlit Secrets."
+    )
+
     st.stop()
-
-
-# ============================================================
-# GROK CLIENT
-# ============================================================
-
-client = OpenAI(
-    api_key=XAI_API_KEY,
-    base_url="https://api.x.ai/v1"
-)
 
 
 # ============================================================
 # MODEL
 # ============================================================
 
-MODEL_NAME = "grok-imagine-image-2.0"
+MODEL_NAME = "@cf/black-forest-labs/flux-2-klein-4b"
 
 
 # ============================================================
-# PAGE TITLE
+# CLOUDFLARE API
 # ============================================================
 
-st.title("🎨 Grok AI Image Generator")
+API_URL = (
+    f"https://api.cloudflare.com/client/v4/accounts/"
+    f"{CLOUDFLARE_ACCOUNT_ID}/ai/run/"
+    f"{MODEL_NAME}"
+)
+
+
+# ============================================================
+# TITLE
+# ============================================================
+
+st.title("🎨 AI Image Generator")
 
 st.write(
-    "Create realistic, high-quality images using Grok Imagine."
+    "Create high-quality realistic images using "
+    "Cloudflare Workers AI."
 )
 
 
@@ -64,24 +75,103 @@ with st.sidebar:
 
     st.header("⚙️ Image Settings")
 
-    resolution = st.selectbox(
-        "Resolution",
-        ["1k", "2k"],
-        index=0
-    )
+
+    # --------------------------------------------------------
+    # QUALITY
+    # --------------------------------------------------------
 
     quality = st.selectbox(
-        "Quality",
-        ["low", "medium"],
+        "🎯 Quality",
+        [
+            "Standard",
+            "High",
+            "Maximum"
+        ],
         index=1
     )
 
+
+    # --------------------------------------------------------
+    # ASPECT RATIO
+    # --------------------------------------------------------
+
+    aspect_ratio = st.selectbox(
+        "📐 Aspect Ratio",
+        [
+            "1:1",
+            "16:9",
+            "9:16",
+            "4:3",
+            "3:4"
+        ],
+        index=0
+    )
+
+
+    # --------------------------------------------------------
+    # RESOLUTION
+    # --------------------------------------------------------
+
+    resolution = st.selectbox(
+        "🖼️ Resolution",
+        [
+            "512p",
+            "768p",
+            "1024p",
+            "1536p",
+            "1920p"
+        ],
+        index=2
+    )
+
+
+    # --------------------------------------------------------
+    # OUTPUT FORMAT
+    # --------------------------------------------------------
+
+    output_format = st.selectbox(
+        "📁 Output Format",
+        [
+            "PNG",
+            "JPEG",
+            "WEBP"
+        ],
+        index=0
+    )
+
+
+    # --------------------------------------------------------
+    # STEPS
+    # --------------------------------------------------------
+
+    if quality == "Standard":
+
+        default_steps = 4
+
+    elif quality == "High":
+
+        default_steps = 6
+
+    else:
+
+        default_steps = 8
+
+
+    steps = st.slider(
+        "⚡ Generation Steps",
+        min_value=4,
+        max_value=8,
+        value=default_steps,
+        step=1
+    )
+
+
     st.divider()
 
+
     st.info(
-        "💡 Describe your subject, environment, "
-        "lighting, camera style and important details "
-        "for better results."
+        "Higher resolution and quality can increase "
+        "generation time and usage."
     )
 
 
@@ -95,17 +185,17 @@ prompt = st.text_area(
     placeholder=(
         "Example: A photorealistic adult male lion "
         "walking beside a lion cub in the African savanna "
-        "at golden hour, realistic fur, natural anatomy, "
-        "wildlife photography, cinematic lighting, "
-        "85mm telephoto lens, shallow depth of field"
+        "during golden hour, realistic fur, natural anatomy, "
+        "professional wildlife photography, 85mm telephoto "
+        "lens, shallow depth of field"
     ),
 
-    height=160
+    height=170
 )
 
 
 # ============================================================
-# GENERATE IMAGE
+# GENERATE BUTTON
 # ============================================================
 
 if st.button(
@@ -123,20 +213,79 @@ if st.button(
 
 
     # ========================================================
-    # REALISM ENHANCEMENT
+    # RESOLUTION CALCULATION
+    # ========================================================
+
+    resolution_value = int(
+        resolution.replace("p", "")
+    )
+
+
+    # --------------------------------------------------------
+    # ASPECT RATIO
+    # --------------------------------------------------------
+
+    if aspect_ratio == "1:1":
+
+        width = resolution_value
+        height = resolution_value
+
+
+    elif aspect_ratio == "16:9":
+
+        width = resolution_value
+        height = int(
+            resolution_value * 9 / 16
+        )
+
+
+    elif aspect_ratio == "9:16":
+
+        width = int(
+            resolution_value * 9 / 16
+        )
+        height = resolution_value
+
+
+    elif aspect_ratio == "4:3":
+
+        width = resolution_value
+        height = int(
+            resolution_value * 3 / 4
+        )
+
+
+    else:
+
+        width = int(
+            resolution_value * 3 / 4
+        )
+        height = resolution_value
+
+
+    # ========================================================
+    # CLOUDFLARE LIMIT
+    # ========================================================
+
+    width = min(width, 1920)
+    height = min(height, 1920)
+
+
+    # ========================================================
+    # REALISM PROMPT
     # ========================================================
 
     final_prompt = f"""
-Create a highly realistic, photorealistic image based
-exactly on this request:
+Create a highly realistic, detailed, professional-quality
+image based exactly on this request:
 
 {prompt}
 
-VISUAL QUALITY REQUIREMENTS:
+VISUAL QUALITY:
 
 - Photorealistic appearance
-- Realistic anatomy and proportions
-- Natural facial features
+- Realistic anatomy
+- Natural proportions
 - Realistic skin, fur, hair and materials
 - Physically accurate lighting
 - Natural shadows
@@ -150,115 +299,279 @@ VISUAL QUALITY REQUIREMENTS:
 - Realistic environment
 - Sharp important details
 - Natural depth of field
-- Coherent scene
+- Coherent composition
 
-AVOID:
+DO NOT:
 
-- Cartoon appearance
-- Childish appearance
-- Plastic-looking skin
-- Unrealistic anatomy
-- Extra limbs
-- Extra fingers
-- Extra eyes
-- Distorted faces
-- Deformed bodies
-- Unnecessary objects
-- Unrequested people
-- Unrealistic proportions
+- Make it cartoon-like
+- Make it childish
+- Use exaggerated anatomy
+- Add extra limbs
+- Add extra fingers
+- Add extra eyes
+- Distort faces
+- Distort bodies
+- Add unnecessary people
+- Add unnecessary objects
+- Change the requested subject
 
-Follow the user's requested scene exactly.
+Follow the user's original request precisely.
 """
 
 
     # ========================================================
-    # GENERATION
+    # API REQUEST
     # ========================================================
 
     with st.spinner(
-        "🎨 Grok is generating your image..."
+        "🎨 Generating your image... Please wait."
     ):
 
         try:
 
-            response = client.images.generate(
-                model=MODEL_NAME,
+            headers = {
+                "Authorization": (
+                    f"Bearer {CLOUDFLARE_API_TOKEN}"
+                ),
+                "Content-Type": "multipart/form-data"
+            }
 
-                prompt=final_prompt,
 
-                extra_body={
-                    "resolution": resolution,
-                    "quality": quality
-                }
+            # ------------------------------------------------
+            # MULTIPART DATA
+            # ------------------------------------------------
+
+            data = {
+                "prompt": final_prompt,
+                "width": str(width),
+                "height": str(height),
+                "steps": str(steps)
+            }
+
+
+            # ------------------------------------------------
+            # REQUEST
+            # ------------------------------------------------
+
+            response = requests.post(
+                API_URL,
+                headers=headers,
+                files={
+                    key: (None, value)
+                    for key, value in data.items()
+                },
+                timeout=300
             )
 
 
             # =================================================
-            # GET IMAGE URL
+            # HTTP ERROR
             # =================================================
 
-            image_url = response.data[0].url
+            if response.status_code != 200:
 
+                try:
 
-            if not image_url:
+                    error_data = response.json()
+
+                except Exception:
+
+                    error_data = response.text
+
 
                 st.error(
-                    "❌ Grok did not return an image URL."
+                    f"❌ Cloudflare API Error "
+                    f"({response.status_code})"
+                )
+
+                st.code(
+                    str(error_data)
                 )
 
                 st.stop()
 
 
             # =================================================
-            # DOWNLOAD IMAGE
+            # RESPONSE
             # =================================================
 
-            import requests
+            result = response.json()
 
-            image_response = requests.get(
-                image_url,
-                timeout=60
+
+            if not result.get("success", False):
+
+                st.error(
+                    "❌ Cloudflare failed to generate "
+                    "the image."
+                )
+
+                st.code(
+                    str(result)
+                )
+
+                st.stop()
+
+
+            # =================================================
+            # GET IMAGE
+            # =================================================
+
+            image_base64 = result["result"]["image"]
+
+
+            # =================================================
+            # DECODE
+            # =================================================
+
+            image_bytes = base64.b64decode(
+                image_base64
             )
 
-            image_response.raise_for_status()
 
-            image_data = image_response.content
+            # =================================================
+            # OPEN IMAGE
+            # =================================================
+
+            image = Image.open(
+                BytesIO(image_bytes)
+            )
 
 
             # =================================================
-            # DISPLAY IMAGE
+            # SUCCESS
             # =================================================
 
             st.success(
                 "✅ Image generated successfully!"
             )
 
+
+            # =================================================
+            # DISPLAY
+            # =================================================
+
             st.image(
-                image_data,
-                caption="Generated by Grok Imagine",
+                image,
+                caption=(
+                    f"Generated Image • "
+                    f"{width} × {height}"
+                ),
                 use_container_width=True
             )
 
 
             # =================================================
-            # DOWNLOAD BUTTON
+            # FORMAT CONVERSION
+            # =================================================
+
+            download_buffer = BytesIO()
+
+
+            if output_format == "PNG":
+
+                if image.mode not in ["RGB", "RGBA"]:
+
+                    image = image.convert("RGB")
+
+
+                image.save(
+                    download_buffer,
+                    format="PNG"
+                )
+
+                file_name = (
+                    "ai_generated_image.png"
+                )
+
+                mime_type = "image/png"
+
+
+            elif output_format == "WEBP":
+
+                if image.mode != "RGB":
+
+                    image = image.convert("RGB")
+
+
+                image.save(
+                    download_buffer,
+                    format="WEBP",
+                    quality=95
+                )
+
+                file_name = (
+                    "ai_generated_image.webp"
+                )
+
+                mime_type = "image/webp"
+
+
+            else:
+
+                if image.mode != "RGB":
+
+                    image = image.convert("RGB")
+
+
+                image.save(
+                    download_buffer,
+                    format="JPEG",
+                    quality=95
+                )
+
+                file_name = (
+                    "ai_generated_image.jpg"
+                )
+
+                mime_type = "image/jpeg"
+
+
+            # =================================================
+            # DOWNLOAD
             # =================================================
 
             st.download_button(
-                label="⬇️ Download Image",
+                label=(
+                    f"⬇️ Download {output_format}"
+                ),
 
-                data=image_data,
+                data=download_buffer.getvalue(),
 
-                file_name="grok_generated_image.jpg",
+                file_name=file_name,
 
-                mime="image/jpeg",
+                mime=mime_type,
 
                 use_container_width=True
             )
 
 
         # ====================================================
-        # ERROR HANDLING
+        # TIMEOUT
+        # ====================================================
+
+        except requests.exceptions.Timeout:
+
+            st.error(
+                "⏱️ Generation timed out. "
+                "Try a smaller resolution."
+            )
+
+
+        # ====================================================
+        # CONNECTION ERROR
+        # ====================================================
+
+        except requests.exceptions.RequestException as e:
+
+            st.error(
+                "❌ Could not connect to Cloudflare."
+            )
+
+            st.exception(e)
+
+
+        # ====================================================
+        # GENERAL ERROR
         # ====================================================
 
         except Exception as e:
@@ -277,5 +590,7 @@ Follow the user's requested scene exactly.
 st.divider()
 
 st.caption(
-    "Powered by xAI • Grok Imagine Image 2.0"
+    "Powered by Cloudflare Workers AI • "
+    "FLUX.2 Klein 4B"
 )
+```
