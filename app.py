@@ -1,10 +1,10 @@
-python
 import os
 from io import BytesIO
 
 import streamlit as st
 from dotenv import load_dotenv
 from huggingface_hub import InferenceClient
+
 
 # --------------------------------------------------
 # LOAD ENVIRONMENT VARIABLES
@@ -13,6 +13,7 @@ from huggingface_hub import InferenceClient
 load_dotenv()
 
 HF_TOKEN = os.getenv("HF_TOKEN")
+
 
 # --------------------------------------------------
 # PAGE CONFIGURATION
@@ -24,6 +25,7 @@ st.set_page_config(
     layout="centered"
 )
 
+
 # --------------------------------------------------
 # CHECK HUGGING FACE TOKEN
 # --------------------------------------------------
@@ -33,16 +35,18 @@ if not HF_TOKEN:
     st.info("Add HF_TOKEN to your .env file or Streamlit Secrets.")
     st.stop()
 
+
 # --------------------------------------------------
 # HUGGING FACE MODEL
 # --------------------------------------------------
 
-MODEL_NAME = "black-forest-labs/FLUX.1-schnell"
+MODEL_NAME = "black-forest-labs/FLUX.1-Krea-dev"
 
 client = InferenceClient(
-    provider="hf-inference",
+    provider="fal-ai",
     api_key=HF_TOKEN
 )
+
 
 # --------------------------------------------------
 # TITLE
@@ -54,38 +58,60 @@ st.write(
     "Turn your ideas into images using AI."
 )
 
+
 # --------------------------------------------------
 # PROMPT
 # --------------------------------------------------
 
 prompt = st.text_area(
     "✍️ Enter your prompt",
-    placeholder="Example: A futuristic city at night, cinematic lighting, highly detailed",
+    placeholder=(
+        "Example: A realistic lion standing with its cub "
+        "in the African savanna at sunset, "
+        "professional wildlife photography"
+    ),
     height=120
 )
+
 
 # --------------------------------------------------
 # GENERATE IMAGE
 # --------------------------------------------------
 
-if st.button("🎨 Generate Image", use_container_width=True):
+if st.button(
+    "🎨 Generate Image",
+    use_container_width=True
+):
 
     if not prompt.strip():
-        st.warning("Please enter a prompt first.")
+
+        st.warning(
+            "Please enter a prompt first."
+        )
+
         st.stop()
 
-    with st.spinner("Generating your image... Please wait."):
+
+    with st.spinner(
+        "Generating your image... Please wait."
+    ):
+
         try:
+
+            # Generate image
             image = client.text_to_image(
                 prompt=prompt,
                 model=MODEL_NAME
             )
 
+
             # --------------------------------------------------
             # DISPLAY IMAGE
             # --------------------------------------------------
 
-            st.success("Image generated successfully!")
+            st.success(
+                "Image generated successfully!"
+            )
 
             st.image(
                 image,
@@ -93,12 +119,20 @@ if st.button("🎨 Generate Image", use_container_width=True):
                 use_container_width=True
             )
 
+
             # --------------------------------------------------
             # CONVERT IMAGE TO BYTES
             # --------------------------------------------------
 
             image_bytes = BytesIO()
-            image.save(image_bytes, format="PNG")
+
+            image.save(
+                image_bytes,
+                format="PNG"
+            )
+
+            image_bytes.seek(0)
+
 
             # --------------------------------------------------
             # DOWNLOAD BUTTON
@@ -112,9 +146,15 @@ if st.button("🎨 Generate Image", use_container_width=True):
                 use_container_width=True
             )
 
+
         except Exception as e:
-            st.error("Image generation failed.")
+
+            st.error(
+                "Image generation failed."
+            )
+
             st.exception(e)
+
 
 # --------------------------------------------------
 # FOOTER
@@ -123,6 +163,6 @@ if st.button("🎨 Generate Image", use_container_width=True):
 st.divider()
 
 st.caption(
-    "Powered by Hugging Face • Model: FLUX.1-schnell"
+    "Powered by Hugging Face • "
+    "Model: FLUX.1-Krea-dev"
 )
-
