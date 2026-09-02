@@ -125,4 +125,4 @@ st.divider()
 st.caption(
     "Powered by Hugging Face • Model: FLUX.1-schnell"
 )
-```
+
