@@ -1,4 +1,3 @@
-```python
 import os
 from io import BytesIO
 
@@ -6,17 +5,17 @@ import streamlit as st
 from dotenv import load_dotenv
 from huggingface_hub import InferenceClient
 
-# --------------------------------------------------
+# ==============================
 # LOAD ENVIRONMENT VARIABLES
-# --------------------------------------------------
+# ==============================
 
 load_dotenv()
 
 HF_TOKEN = os.getenv("HF_TOKEN")
 
-# --------------------------------------------------
-# PAGE CONFIGURATION
-# --------------------------------------------------
+# ==============================
+# PAGE SETTINGS
+# ==============================
 
 st.set_page_config(
     page_title="AI Image Generator",
@@ -24,105 +23,168 @@ st.set_page_config(
     layout="centered"
 )
 
-# --------------------------------------------------
-# CHECK HUGGING FACE TOKEN
-# --------------------------------------------------
+# ==============================
+# HEADER
+# ==============================
+
+st.title("🎨 AI Image Generator")
+st.write("Create images from your ideas using AI.")
+
+st.divider()
+
+# ==============================
+# CHECK API KEY
+# ==============================
 
 if not HF_TOKEN:
-    st.error("Hugging Face API token is missing.")
-    st.info("Add HF_TOKEN to your .env file or Streamlit Secrets.")
+    st.error("❌ Hugging Face API token not found.")
+    st.info(
+        "For local use, create a .env file and add: HF_TOKEN=your_token"
+    )
     st.stop()
 
-# --------------------------------------------------
-# HUGGING FACE MODEL
-# --------------------------------------------------
-
-MODEL_NAME = "black-forest-labs/FLUX.1-schnell"
+# ==============================
+# HUGGING FACE CLIENT
+# ==============================
 
 client = InferenceClient(
-    provider="hf-inference",
     api_key=HF_TOKEN
 )
 
-# --------------------------------------------------
-# TITLE
-# --------------------------------------------------
+MODEL_NAME = "black-forest-labs/FLUX.1-schnell"
 
-st.title("🎨 AI Image Generator")
-
-st.write(
-    "Turn your ideas into images using AI."
-)
-
-# --------------------------------------------------
+# ==============================
 # PROMPT
-# --------------------------------------------------
+# ==============================
+
+st.subheader("📝 Describe your image")
 
 prompt = st.text_area(
-    "✍️ Enter your prompt",
-    placeholder="Example: A futuristic city at night, cinematic lighting, highly detailed",
-    height=120
+    "Enter your prompt",
+    placeholder=(
+        "Example: A futuristic city at night, "
+        "neon lights, cinematic atmosphere, "
+        "ultra detailed"
+    ),
+    height=130
 )
 
-# --------------------------------------------------
-# GENERATE IMAGE
-# --------------------------------------------------
+# ==============================
+# GENERATE BUTTON
+# ==============================
 
-if st.button("🎨 Generate Image", use_container_width=True):
+generate = st.button(
+    "🎨 Generate Image",
+    type="primary",
+    use_container_width=True
+)
+
+# ==============================
+# IMAGE GENERATION
+# ==============================
+
+if generate:
 
     if not prompt.strip():
-        st.warning("Please enter a prompt first.")
+        st.warning("⚠️ Please enter a prompt.")
         st.stop()
 
-    with st.spinner("Generating your image... Please wait."):
+    with st.spinner("🎨 Creating your image..."):
+
         try:
+
             image = client.text_to_image(
                 prompt=prompt,
                 model=MODEL_NAME
             )
 
-            # --------------------------------------------------
-            # DISPLAY IMAGE
-            # --------------------------------------------------
+            st.success("✅ Image generated successfully!")
 
-            st.success("Image generated successfully!")
+            # ==============================
+            # DISPLAY IMAGE
+            # ==============================
 
             st.image(
                 image,
-                caption="Generated Image",
+                caption="AI Generated Image",
                 use_container_width=True
             )
 
-            # --------------------------------------------------
-            # CONVERT IMAGE TO BYTES
-            # --------------------------------------------------
+            # ==============================
+            # PREPARE DOWNLOAD
+            # ==============================
 
-            image_bytes = BytesIO()
-            image.save(image_bytes, format="PNG")
+            image_buffer = BytesIO()
 
-            # --------------------------------------------------
+            image.save(
+                image_buffer,
+                format="PNG"
+            )
+
+            image_buffer.seek(0)
+
+            # ==============================
             # DOWNLOAD BUTTON
-            # --------------------------------------------------
+            # ==============================
 
             st.download_button(
                 label="⬇️ Download Image",
-                data=image_bytes.getvalue(),
+                data=image_buffer,
                 file_name="ai_generated_image.png",
                 mime="image/png",
                 use_container_width=True
             )
 
-        except Exception as e:
-            st.error("Image generation failed.")
-            st.exception(e)
+        except Exception as error:
 
-# --------------------------------------------------
+            st.error("❌ Image generation failed.")
+
+            st.write(
+                "Please check your Hugging Face token, "
+                "model availability, and API access."
+            )
+
+            st.code(str(error))
+
+# ==============================
+# SIDEBAR
+# ==============================
+
+with st.sidebar:
+
+    st.header("⚙️ Model Information")
+
+    st.write("**Model:**")
+    st.code(MODEL_NAME)
+
+    st.write("**Provider:**")
+    st.write("Hugging Face")
+
+    st.divider()
+
+    st.write("### 💡 Prompt Tips")
+
+    st.write(
+        "Describe the subject, environment, "
+        "lighting, style, and level of detail."
+    )
+
+    st.write(
+        "Example:"
+    )
+
+    st.code(
+        "A realistic tiger walking through a "
+        "misty jungle at sunrise, cinematic "
+        "lighting, highly detailed"
+    )
+
+# ==============================
 # FOOTER
-# --------------------------------------------------
+# ==============================
 
 st.divider()
 
 st.caption(
-    "Powered by Hugging Face • Model: FLUX.1-schnell"
+    "🎨 AI Image Generator • Powered by Hugging Face"
 )
-```
