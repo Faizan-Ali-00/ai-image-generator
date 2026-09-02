@@ -1,4 +1,4 @@
-```python
+python
 import os
 from io import BytesIO
 
