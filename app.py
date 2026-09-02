@@ -2,7 +2,7 @@ import base64
 from io import BytesIO
 
 import streamlit as st
-from google import genai
+from openai import OpenAI
 
 
 # ============================================================
@@ -10,32 +10,31 @@ from google import genai
 # ============================================================
 
 st.set_page_config(
-    page_title="AI Image Generator",
+    page_title="Grok AI Image Generator",
     page_icon="🎨",
     layout="centered"
 )
 
 
 # ============================================================
-# GET GEMINI API KEY
+# GET XAI API KEY
 # ============================================================
 
 try:
-    GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
+    XAI_API_KEY = st.secrets["XAI_API_KEY"]
 except Exception:
-    st.error("❌ GEMINI_API_KEY is missing.")
-    st.info(
-        "Add GEMINI_API_KEY to Streamlit Secrets."
-    )
+    st.error("❌ XAI_API_KEY is missing.")
+    st.info("Add XAI_API_KEY to Streamlit Secrets.")
     st.stop()
 
 
 # ============================================================
-# GEMINI CLIENT
+# GROK CLIENT
 # ============================================================
 
-client = genai.Client(
-    api_key=GEMINI_API_KEY
+client = OpenAI(
+    api_key=XAI_API_KEY,
+    base_url="https://api.x.ai/v1"
 )
 
 
@@ -43,17 +42,17 @@ client = genai.Client(
 # MODEL
 # ============================================================
 
-MODEL_NAME = "gemini-3.1-flash-image"
+MODEL_NAME = "grok-imagine-image-2.0"
 
 
 # ============================================================
-# TITLE
+# PAGE TITLE
 # ============================================================
 
-st.title("🎨 AI Image Generator")
+st.title("🎨 Grok AI Image Generator")
 
 st.write(
-    "Create high-quality realistic images from your ideas using Gemini AI."
+    "Create realistic, high-quality images using Grok Imagine."
 )
 
 
@@ -65,34 +64,24 @@ with st.sidebar:
 
     st.header("⚙️ Image Settings")
 
-    aspect_ratio = st.selectbox(
-        "Aspect Ratio",
-        [
-            "1:1",
-            "16:9",
-            "9:16",
-            "4:3",
-            "3:4"
-        ],
+    resolution = st.selectbox(
+        "Resolution",
+        ["1k", "2k"],
         index=0
     )
 
-    image_size = st.selectbox(
-        "Image Quality",
-        [
-            "1K",
-            "2K",
-            "4K"
-        ],
+    quality = st.selectbox(
+        "Quality",
+        ["low", "medium"],
         index=1
     )
 
     st.divider()
 
     st.info(
-        "💡 For the most realistic results, describe "
-        "the subject, environment, lighting, camera "
-        "style, and important details."
+        "💡 Describe your subject, environment, "
+        "lighting, camera style and important details "
+        "for better results."
     )
 
 
@@ -102,28 +91,27 @@ with st.sidebar:
 
 prompt = st.text_area(
     "✍️ Enter your image prompt",
+
     placeholder=(
-        "Example: A realistic adult male lion walking "
-        "beside a lion cub in the African savanna at "
-        "golden hour, natural wildlife photography, "
-        "realistic fur, realistic anatomy, cinematic lighting"
+        "Example: A photorealistic adult male lion "
+        "walking beside a lion cub in the African savanna "
+        "at golden hour, realistic fur, natural anatomy, "
+        "wildlife photography, cinematic lighting, "
+        "85mm telephoto lens, shallow depth of field"
     ),
+
     height=160
 )
 
 
 # ============================================================
-# GENERATE BUTTON
+# GENERATE IMAGE
 # ============================================================
 
 if st.button(
     "🎨 Generate Image",
     use_container_width=True
 ):
-
-    # --------------------------------------------------------
-    # CHECK PROMPT
-    # --------------------------------------------------------
 
     if not prompt.strip():
 
@@ -134,164 +122,137 @@ if st.button(
         st.stop()
 
 
-    # --------------------------------------------------------
-    # REALISM INSTRUCTIONS
-    # --------------------------------------------------------
+    # ========================================================
+    # REALISM ENHANCEMENT
+    # ========================================================
 
     final_prompt = f"""
-Create a highly realistic, high-quality image based on this request:
+Create a highly realistic, photorealistic image based
+exactly on this request:
 
 {prompt}
 
-IMPORTANT VISUAL REQUIREMENTS:
+VISUAL QUALITY REQUIREMENTS:
 
 - Photorealistic appearance
 - Realistic anatomy and proportions
 - Natural facial features
-- Realistic textures and materials
+- Realistic skin, fur, hair and materials
 - Physically accurate lighting
-- Natural shadows and reflections
+- Natural shadows
+- Realistic reflections
 - Realistic depth and perspective
-- Detailed environment
 - Natural colors
-- Professional photography quality when appropriate
+- Detailed textures
+- Professional photography quality
+- Cinematic composition
+- Correct object scale
+- Realistic environment
 - Sharp important details
-- Coherent composition
-- Realistic scale between objects
-- No unnecessary objects or subjects
-- Do not make the image cartoon-like
-- Do not make it childish
-- Do not use exaggerated anatomy
-- Do not add extra limbs, fingers, eyes, faces, or body parts
-- Do not distort objects
-- Follow the user's requested scene exactly
+- Natural depth of field
+- Coherent scene
+
+AVOID:
+
+- Cartoon appearance
+- Childish appearance
+- Plastic-looking skin
+- Unrealistic anatomy
+- Extra limbs
+- Extra fingers
+- Extra eyes
+- Distorted faces
+- Deformed bodies
+- Unnecessary objects
+- Unrequested people
+- Unrealistic proportions
+
+Follow the user's requested scene exactly.
 """
 
 
-    # --------------------------------------------------------
-    # GENERATE IMAGE
-    # --------------------------------------------------------
+    # ========================================================
+    # GENERATION
+    # ========================================================
 
     with st.spinner(
-        "🎨 Generating your image... Please wait."
+        "🎨 Grok is generating your image..."
     ):
 
         try:
 
-            response = client.interactions.create(
+            response = client.images.generate(
                 model=MODEL_NAME,
 
-                input=final_prompt,
+                prompt=final_prompt,
 
-                response_format={
-                    "type": "image",
-                    "mime_type": "image/jpeg",
-                    "aspect_ratio": aspect_ratio,
-                    "image_size": image_size
-                },
-
-                generation_config={
-                    "thinking_level": "high"
+                extra_body={
+                    "resolution": resolution,
+                    "quality": quality
                 }
             )
 
 
-            # ------------------------------------------------
-            # FIND GENERATED IMAGE
-            # ------------------------------------------------
+            # =================================================
+            # GET IMAGE URL
+            # =================================================
 
-            generated_image = None
-
-            for output in response.output:
-
-                if hasattr(output, "data"):
-
-                    generated_image = output.data
-
-                    break
+            image_url = response.data[0].url
 
 
-            # ------------------------------------------------
-            # CHECK IMAGE
-            # ------------------------------------------------
-
-            if not generated_image:
+            if not image_url:
 
                 st.error(
-                    "❌ Gemini did not return an image."
+                    "❌ Grok did not return an image URL."
                 )
 
                 st.stop()
 
 
-            # ------------------------------------------------
-            # DECODE BASE64 IMAGE
-            # ------------------------------------------------
+            # =================================================
+            # DOWNLOAD IMAGE
+            # =================================================
 
-            image_data = base64.b64decode(
-                generated_image
+            import requests
+
+            image_response = requests.get(
+                image_url,
+                timeout=60
             )
 
+            image_response.raise_for_status()
 
-            # ------------------------------------------------
-            # OPEN IMAGE
-            # ------------------------------------------------
-
-            from PIL import Image
-
-            image = Image.open(
-                BytesIO(image_data)
-            )
+            image_data = image_response.content
 
 
-            # ------------------------------------------------
-            # SUCCESS
-            # ------------------------------------------------
+            # =================================================
+            # DISPLAY IMAGE
+            # =================================================
 
             st.success(
                 "✅ Image generated successfully!"
             )
 
-
-            # ------------------------------------------------
-            # DISPLAY IMAGE
-            # ------------------------------------------------
-
             st.image(
-                image,
-                caption="Generated Image",
+                image_data,
+                caption="Generated by Grok Imagine",
                 use_container_width=True
             )
 
 
-            # ------------------------------------------------
-            # CONVERT TO JPEG
-            # ------------------------------------------------
-
-            image_bytes = BytesIO()
-
-            # Convert RGB/RGBA to RGB for JPEG
-            if image.mode != "RGB":
-
-                image = image.convert("RGB")
-
-
-            image.save(
-                image_bytes,
-                format="JPEG",
-                quality=95
-            )
-
-
-            # ------------------------------------------------
+            # =================================================
             # DOWNLOAD BUTTON
-            # ------------------------------------------------
+            # =================================================
 
             st.download_button(
                 label="⬇️ Download Image",
-                data=image_bytes.getvalue(),
-                file_name="ai_generated_image.jpg",
+
+                data=image_data,
+
+                file_name="grok_generated_image.jpg",
+
                 mime="image/jpeg",
+
                 use_container_width=True
             )
 
@@ -316,5 +277,5 @@ IMPORTANT VISUAL REQUIREMENTS:
 st.divider()
 
 st.caption(
-    "Powered by Google Gemini • Model: gemini-3.1-flash-image"
+    "Powered by xAI • Grok Imagine Image 2.0"
 )
