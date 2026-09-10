@@ -1,104 +1,116 @@
 # 🎨 AI Image Generator
 
-A simple AI image generation web application built with **Python, Streamlit, and Hugging Face**.
+A simple AI image generation web application built with Python, Streamlit, and Hugging Face.
 
-The application allows users to enter a text description and generate an AI-created image using the **FLUX.1-schnell** model.
+The application allows users to enter a text description and generate an AI-created image using the FLUX.1-schnell model.
 
-## 🚀 Features
+![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python&logoColor=white)
+![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?logo=streamlit&logoColor=white)
+![Hugging Face](https://img.shields.io/badge/Hugging%20Face-FFD21E?logo=huggingface&logoColor=black)
+![FLUX](https://img.shields.io/badge/FLUX.1-schnell-9B59B6)
+![License](https://img.shields.io/badge/License-MIT-green)
+
+## 📖 Overview
+
+AI Image Generator is a lightweight web app that turns your text prompts into images. Powered by Hugging Face's FLUX.1-schnell model, it delivers fast and high-quality AI-generated visuals through a simple Streamlit interface.
+
+## ✨ Features
 
 - 📝 Text-to-image generation
-- 🎨 FLUX AI image generation
+- ⚡ FLUX AI image generation
 - 🖥️ Simple Streamlit interface
 - 🖼️ Image preview
 - ⬇️ Download generated images
 - ⚠️ Basic error handling
 
-## 🛠️ Technologies Used
+## 🛠️ Tech Stack
 
-- Python
-- Streamlit
-- Hugging Face Inference API
-- FLUX.1-schnell
-- python-dotenv
+- Frontend: Streamlit
+- Model: FLUX.1-schnell (via Hugging Face)
+- Image Processing: Pillow
+- Language: Python 3.10+
 
-## 📁 Project Structure
+## 📂 Project Structure
 
-```text
-ai-image-generator/
-│
-├── app.py
-├── requirements.txt
-├── .gitignore
-├── LICENSE
-└── README.md
-```
+    ai-image-generator/
+    ├── app.py                # Streamlit app (main entry point)
+    ├── requirements.txt      # Python dependencies
+    ├── .gitignore            # Git ignore rules
+    └── README.md
 
-## ⚙️ Run Locally
+## ⚙️ Installation
 
-Clone the repository:
+### 1. Clone the repository
 
-```bash
-git clone https://github.com/Faizan-Ali-00/ai-image-generator.git
-```
+    git clone https://github.com/Faizan-Ali-00/ai-image-generator.git
+    cd ai-image-generator
 
-Open the project folder:
+### 2. Create a virtual environment
 
-```bash
-cd ai-image-generator
-```
+    # Windows
+    python -m venv venv
+    venv\Scripts\activate
 
-Create and activate a virtual environment:
+    # macOS / Linux
+    python3 -m venv venv
+    source venv/bin/activate
 
-```bash
-python -m venv venv
-```
+### 3. Install dependencies
 
-Windows:
+    pip install -r requirements.txt
 
-```bash
-venv\Scripts\activate
-```
+### 4. Set up your API key
 
-Install the dependencies:
+Create a `.env` file in the root directory:
 
-```bash
-pip install -r requirements.txt
-```
+    HUGGINGFACE_API_KEY=your_huggingface_api_key_here
 
-Create a `.env` file:
+Get your API key from https://huggingface.co/settings/tokens
 
-```text
-HF_TOKEN=your_hugging_face_token
-```
+## ▶️ Usage
 
-Then start the application:
+Run the Streamlit app:
 
-```bash
-streamlit run app.py
-```
+    streamlit run app.py
 
-## 🔐 Security
+Then open your browser at http://localhost:8501
 
-The Hugging Face API token is stored in environment variables and is **not included in the GitHub repository**.
+1. Enter a text description of the image you want
+2. Click Generate
+3. Preview the AI-generated image
+4. Download the image if you like it
 
-Never publish your API token publicly.
+## 🔒 Notes
 
-## 🌐 Deployment
+- Never commit your `.env` file — it contains your Hugging Face API key
+- Make sure `.env` is listed in `.gitignore`
+- If you accidentally expose a key, revoke it immediately at https://huggingface.co/settings/tokens
 
-The application can be deployed using **Streamlit Community Cloud**.
+## 🤝 Contributing
 
-Add the Hugging Face token to Streamlit's **Secrets** configuration:
-
-```toml
-HF_TOKEN = "your_hugging_face_token"
-```
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/AmazingFeature`
+3. Commit your changes: `git commit -m "Add some AmazingFeature"`
+4. Push to the branch: `git push origin feature/AmazingFeature`
+5. Open a Pull Request
 
 ## 📄 License
 
 This project is licensed under the MIT License.
 
-## 👨‍💻 Author
+## 👤 Author
 
-**Faizan Ali**
+Faizan Ali
 
-GitHub: https://github.com/Faizan-Ali-00
+- GitHub: https://github.com/Faizan-Ali-00
+- Repository: https://github.com/Faizan-Ali-00/ai-image-generator
+
+## ⭐ Show Your Support
+
+If this project helped you, please give it a star on GitHub.
+
+## 🙏 Acknowledgments
+
+- Hugging Face — https://huggingface.co
+- FLUX.1-schnell — https://huggingface.co/black-forest-labs/FLUX.1-schnell
+- Streamlit — https://streamlit.io
