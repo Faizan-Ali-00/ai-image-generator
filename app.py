@@ -22,7 +22,7 @@ st.set_page_config(
 )
 
 # =========================
-# LOGO — Lumina Radiant Sun (Teal/Violet/Magenta)
+# LOGO
 # =========================
 
 LOGO_SVG = """
@@ -51,12 +51,9 @@ LOGO_SVG = """
       </feMerge>
     </filter>
   </defs>
-
   <rect width="720" height="240" fill="#060a13" rx="24"/>
-
   <g transform="translate(120, 120)">
     <circle cx="0" cy="0" r="95" fill="#22d3ee" opacity="0.12"/>
-
     <g stroke="url(#rayGrad)" stroke-width="4" stroke-linecap="round" opacity="0.85">
       <line x1="0" y1="-82" x2="0" y2="-60"/>
       <line x1="0" y1="82"  x2="0" y2="60"/>
@@ -75,24 +72,12 @@ LOGO_SVG = """
       <line x1="-30" y1="76"  x2="-22" y2="56"/>
       <line x1="30"  y1="76"  x2="22"  y2="56"/>
     </g>
-
     <circle cx="0" cy="0" r="52" fill="url(#sunGrad)" filter="url(#sunGlow)"/>
     <circle cx="0" cy="0" r="44" fill="none" stroke="#ffffff" stroke-opacity="0.25" stroke-width="1.5"/>
     <circle cx="0" cy="0" r="14" fill="#ffffff" opacity="0.95"/>
   </g>
-
-  <text x="245" y="132"
-        font-family="'Inter','Segoe UI',Arial,Helvetica,sans-serif"
-        font-size="80" font-weight="900"
-        fill="url(#textGrad)"
-        letter-spacing="-3">Lumina</text>
-
-  <text x="250" y="176"
-        font-family="'Inter','Segoe UI',Arial,Helvetica,sans-serif"
-        font-size="15" font-weight="500"
-        fill="#94a3c8"
-        letter-spacing="3">TURN WORDS INTO LIGHT</text>
-
+  <text x="245" y="132" font-family="'Inter','Segoe UI',Arial,Helvetica,sans-serif" font-size="80" font-weight="900" fill="url(#textGrad)" letter-spacing="-3">Lumina</text>
+  <text x="250" y="176" font-family="'Inter','Segoe UI',Arial,Helvetica,sans-serif" font-size="15" font-weight="500" fill="#94a3c8" letter-spacing="3">TURN WORDS INTO LIGHT</text>
   <circle cx="530" cy="124" r="6" fill="#E879F9" opacity="0.95"/>
 </svg>
 """
@@ -270,7 +255,7 @@ if "settings_version" not in st.session_state:
     st.session_state.settings_version = 0
 
 # =========================
-# CSS — Teal / Violet / Magenta
+# CSS
 # =========================
 
 st.markdown("""
@@ -286,7 +271,6 @@ st.markdown("""
     footer {visibility: hidden;}
     header[data-testid="stHeader"] {background: transparent;}
 
-    /* Hero */
     .hero {
         display: flex;
         justify-content: center;
@@ -299,7 +283,6 @@ st.markdown("""
         filter: drop-shadow(0 20px 50px rgba(34, 211, 238, 0.35));
     }
 
-    /* Description block */
     .desc-block {
         text-align: center;
         max-width: 640px;
@@ -321,7 +304,25 @@ st.markdown("""
         line-height: 1.6;
     }
 
-    /* Sidebar */
+    .section-title-row {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        margin: 1rem 0 0.6rem 0;
+    }
+    .section-title-row img {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        box-shadow: 0 4px 14px rgba(34, 211, 238, 0.35);
+    }
+    .section-title-row span {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #c8d4e8;
+        letter-spacing: -0.4px;
+    }
+
     section[data-testid="stSidebar"] {
         background: linear-gradient(180deg, #0a1220 0%, #121426 100%);
         border-right: 1px solid rgba(34, 211, 238, 0.12);
@@ -378,7 +379,6 @@ st.markdown("""
         letter-spacing: 0.6px;
     }
 
-    /* Main buttons */
     .stButton > button {
         background: linear-gradient(135deg, #22d3ee 0%, #8b5cf6 100%);
         color: #060a13; border: none; border-radius: 12px;
@@ -480,7 +480,14 @@ st.markdown("""
         text-align: center;
         padding: 3rem 2rem;
     }
-    .empty-state-icon { font-size: 3rem; opacity: 0.4; margin-bottom: 1rem; }
+    .empty-state img {
+        width: 76px;
+        height: 76px;
+        border-radius: 18px;
+        opacity: 0.6;
+        margin-bottom: 1rem;
+        box-shadow: 0 8px 24px rgba(34, 211, 238, 0.25);
+    }
     .empty-state-title { font-size: 1rem; color: #64748b; font-weight: 500; }
 
     .result-header {
@@ -605,7 +612,7 @@ TOGETHER_API_KEY = _get_secret("TOGETHER_API_KEY")
 FAL_API_KEY = _get_secret("FAL_API_KEY")
 
 # =========================
-# PROVIDERS — 5+ model chain (NO Hugging Face)
+# PROVIDERS
 # =========================
 
 
@@ -1081,10 +1088,18 @@ st.markdown(
 )
 
 # =========================
-# PROMPT INPUT
+# PROMPT INPUT (with Lumina icon)
 # =========================
 
-st.markdown("### 📝 Describe your image")
+st.markdown(
+    f"""
+    <div class="section-title-row">
+        <img src="{ICON_DATA_URI}" alt="Lumina icon" />
+        <span>Describe your image</span>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 prompt = st.text_area(
     "Prompt",
@@ -1210,9 +1225,9 @@ if st.button("💫  Generate Image", use_container_width=True, key="generate_btn
 
 else:
     st.markdown(
-        """
+        f"""
         <div class="empty-state">
-            <div class="empty-state-icon">💫</div>
+            <img src="{ICON_DATA_URI}" alt="Lumina icon" />
             <div class="empty-state-title">Enter a prompt above and click Generate</div>
         </div>
         """,
