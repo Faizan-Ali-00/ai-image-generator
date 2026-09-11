@@ -1,0 +1,29 @@
+<svg width="240" height="240" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="sunGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#f0fdff"/>
+      <stop offset="25%" stop-color="#22d3ee"/>
+      <stop offset="60%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#e879f9"/>
+    </radialGradient>
+    <linearGradient id="rayGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#e879f9"/>
+    </linearGradient>
+  </defs>
+  <rect width="240" height="240" rx="48" fill="#060a13"/>
+  <circle cx="120" cy="120" r="105" fill="#22d3ee" opacity="0.12"/>
+  <g stroke="url(#rayGrad)" stroke-width="5" stroke-linecap="round" opacity="0.85">
+    <line x1="120" y1="26" x2="120" y2="48"/>
+    <line x1="120" y1="214" x2="120" y2="192"/>
+    <line x1="26" y1="120" x2="48" y2="120"/>
+    <line x1="214" y1="120" x2="192" y2="120"/>
+    <line x1="54" y1="54" x2="70" y2="70"/>
+    <line x1="186" y1="54" x2="170" y2="70"/>
+    <line x1="54" y1="186" x2="70" y2="170"/>
+    <line x1="186" y1="186" x2="170" y2="170"/>
+  </g>
+  <circle cx="120" cy="120" r="55" fill="url(#sunGrad)"/>
+  <circle cx="120" cy="120" r="46" fill="none" stroke="#ffffff" stroke-opacity="0.22" stroke-width="2"/>
+  <circle cx="120" cy="120" r="14" fill="#ffffff" opacity="0.95"/>
+</svg>
