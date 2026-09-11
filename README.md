@@ -1,8 +1,8 @@
 <div align="center">
-  <img src="logos/lumina.svg" width="360" alt="Lumina Logo" />
+  <img src="logos/lumina.svg" width="440" alt="Lumina Logo" />
 </div>
 
-# 💫 Lumina — AI Image Generator
+# Lumina — AI Image Generator
 
 Turn words into light. Lumina transforms your text prompts into stunning AI-generated visuals — powered by a resilient multi-model chain that never leaves you waiting.
 
@@ -22,17 +22,17 @@ Built with a **multi-provider fallback architecture** and a clean teal/violet UI
 
 ## ✨ Features
 
-- 🎨 **Text-to-image generation** — describe anything, get a stunning image
-- 🔗 **7-model fallback chain** — Cloudflare FLUX → SDXL → Schnell → Replicate → Together → fal.ai → Pollinations
-- 🎚️ **Three quality levels** — Standard · High · Maximum
-- 📐 **Multiple aspect ratios** — Square · Landscape · Portrait
-- 📏 **Smart resolutions** — from 512×512 up to 1920×1080
-- 🖼️ **Three output formats** — PNG · JPEG · WEBP
-- 📚 **History panel** — auto-saves last 50 generations with thumbnails
-- ⚙️ **Settings panel** — save + reset defaults (persistent)
-- 💾 **Download button** — one click to save your image
-- 🎯 **Provider indicator** — shows which model generated the image
-- 🌈 **Beautiful UI** — teal/violet gradient, animated sun logo, glassmorphism cards
+- 🎨 Text-to-image generation — describe anything, get a stunning image
+- 🔗 7-model fallback chain — Cloudflare FLUX → SDXL → Schnell → Replicate → Together → fal.ai → Pollinations
+- 🎚️ Three quality levels — Standard · High · Maximum
+- 📐 Multiple aspect ratios — Square · Landscape · Portrait
+- 📏 Smart resolutions — from 512×512 up to 1920×1080
+- 🖼️ Three output formats — PNG · JPEG · WEBP
+- 📚 History panel — auto-saves last 50 generations with thumbnails
+- ⚙️ Settings panel — save + reset defaults (persistent)
+- 💾 Download button — one click to save your image
+- 🎯 Provider indicator — shows which model generated the image
+- 🌈 Beautiful UI — teal/violet gradient, animated sun logo, glassmorphism cards
 
 ## 🛠️ Tech Stack
 
@@ -51,7 +51,7 @@ Built with a **multi-provider fallback architecture** and a clean teal/violet UI
 
 ## 🔗 Multi-Model Architecture
 
-Lumina uses a **provider chain** so it never fails due to a single provider running out of credits:
+Lumina uses a provider chain so it never fails due to a single provider running out of credits:
 
 🎨 Image → 1. Cloudflare FLUX.2 Klein 4B  (primary)
               ↓ (fails)
@@ -69,7 +69,7 @@ Lumina uses a **provider chain** so it never fails due to a single provider runn
               ↓ (fails)
            ❌ Error
 
-You only need **one** provider key to start, but adding all seven means zero downtime. Pollinations works without any key as a guaranteed last resort.
+You only need one provider key to start, but adding all seven means zero downtime. Pollinations works without any key as a guaranteed last resort.
 
 ## 📂 Project Structure
 
@@ -121,11 +121,11 @@ You only need Cloudflare to get started. Pollinations needs no key.
 
 | Provider | Models | Free Tier | Get Key |
 |----------|--------|-----------|---------|
-| **Cloudflare** | FLUX, SDXL, Schnell | 10,000 neurons/day | https://dash.cloudflare.com/profile/api-tokens |
-| **Replicate** | FLUX-schnell | $5 credit on signup | https://replicate.com/account/api-tokens |
-| **Together AI** | FLUX.1-schnell-Free | $1 credit on signup | https://api.together.xyz/settings/api-keys |
-| **fal.ai** | FLUX schnell | $1 credit on signup | https://fal.ai/dashboard/keys |
-| **Pollinations** | FLUX | Unlimited | No key needed ✅ |
+| Cloudflare | FLUX, SDXL, Schnell | 10,000 neurons/day | https://dash.cloudflare.com/profile/api-tokens |
+| Replicate | FLUX-schnell | $5 credit on signup | https://replicate.com/account/api-tokens |
+| Together AI | FLUX.1-schnell-Free | $1 credit on signup | https://api.together.xyz/settings/api-keys |
+| fal.ai | FLUX schnell | $1 credit on signup | https://fal.ai/dashboard/keys |
+| Pollinations | FLUX | Unlimited | No key needed ✅ |
 
 ### Getting Your Cloudflare Account ID
 
