@@ -11,18 +11,7 @@ from datetime import datetime
 from pathlib import Path
 
 # =========================
-# PAGE CONFIG
-# =========================
-
-st.set_page_config(
-    page_title="Lumina — Turn Words Into Light",
-    page_icon="💫",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
-# =========================
-# LOGO
+# LOGO — DEFINED BEFORE PAGE CONFIG
 # =========================
 
 LOGO_SVG = """
@@ -129,6 +118,17 @@ def svg_to_data_uri(svg_string: str) -> str:
 
 LOGO_DATA_URI = svg_to_data_uri(LOGO_SVG)
 ICON_DATA_URI = svg_to_data_uri(ICON_SVG)
+
+# =========================
+# PAGE CONFIG — uses ICON as favicon
+# =========================
+
+st.set_page_config(
+    page_title="Lumina — Turn Words Into Light",
+    page_icon=ICON_DATA_URI,
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
 # =========================
 # STORAGE
